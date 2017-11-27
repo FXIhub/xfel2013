@@ -1,19 +1,27 @@
 import plotting.image
-
+import analysis.agipd
 
 state = {}
 state['Facility'] = 'euxfel'
+state['socket'] = 'tcp://127.0.0.1:4501'
 
-dark = 0.
-event_number = 0
 
 def onEvent(evt):
-    global dark, event_number
-    print("Available keys: " + str(evt.keys()))
-    print(evt['photonPixelDetectors']['AGIPD1'].data.shape)
-    dark  += evt['photonPixelDetectors']['AGIPD1'].data
-    #print(evt['eventID'])
-    print(event_number)
-    event_number += 1
 
-    plotting.image.plotImage(evt['photonPixelDetectors']['AGIPD1'])
+    # Available keys
+    print("Available keys: " + str(evt.keys()))
+
+    # Shape of AGIPD array
+    print(evt['photonPixelDetectors']['AGIPD1'].data.shape)
+
+    # Get individual panels from the AGIPD
+    agipd_0 = analysis.agipd.get_panel(evt, evt['photonPixelDetectors']['AGIPD1'], 0)
+
+    # Shape of the AGIPD panel
+    print(agipd_0.data.shape)
+
+    # Plotting the AGIPD panel
+    plotting.image.plotImage(agipd_0)
+
+    # TODO: Add more ......
+    # ....
