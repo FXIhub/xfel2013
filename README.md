@@ -1,4 +1,4 @@
-## Getting started
+## Getting started (online analysis)
 Login to the Maxwell cluster and source ```source_this_at_xfel```. This should provide all the dependencies and include the Hummingbird executable in your path. For testing purposes, one can start the AGIPD simulator to provide data over ZMQ, e.g. on port 4500:
 
 ```
