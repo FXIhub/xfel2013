@@ -20,3 +20,23 @@ hummingbird.py -i
 
 ## How to contribute
 You can always check the issue tracker on this repository and/or the Hummingbird repository in order look for things to do or bugs to be fixed...
+
+## Meeting notes
+
+### AGIPD detector
+
+__Data of the entire detector (all panels) can be received from:__
+
+       - Raw: tcp://10.253.0.51:4500
+       - Corrected: tcp://10.253.0.51:4501
+
+       Note: Stream of wnly events with FEL on!
+
+__Data of the central (working) three modules can be received from:__
+
+       - Module 0: tcp://10.253/0.52:4600
+       - Module 1: tcp://10.253/0.52:4601
+       - Module 2: tcp://10.253/0.52:4602
+
+       Stream of all events: (garbage / garbage / FEL on / FEL off / FEL on / FEL off ...)
+
