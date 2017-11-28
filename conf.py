@@ -4,20 +4,30 @@ import analysis.agipd
 state = {}
 state['Facility'] = 'euxfel'
 
-# Reading from simulated data
-#state['socket'] = 'tcp://10.253.0.65:4700'
-
 # Reading from raw AGIPD data source
-state['socket'] = 'tcp://10.253.0.51:4500'
+state['euxfel/agipd'] = {}
+state['euxfel/agipd']['socket'] = 'tcp://10.253.0.51:4500'
+state['euxfel/agipd']['source'] = 'SPB_DET_AGIPD1M-1/DET'
 
-# Reading from corrected AGIPD data source
-#state['socket'] = 'tcp://10.253.0.51:4501'
+# Reading from calibrated AGIPD data source
+#state['euxfel/agipd'] = {}
+#state['euxfel/agipd']['socket'] = 'tcp://10.253.0.51:4501'
+#state['euxfel/agipd']['source'] = 'SPB_DET_AGIPD1M-1/DET'
 
-# Reading from individual raw AGIPD data sources
-#state['socket'] = 'tcp://10.253.0.52:4600'
-#state['socket'] = 'tcp://10.253.0.52:4601'
-#state['socket'] = 'tcp://10.253.0.52:4602'
+# Reading from individual raw AGIPD data source (panel 03)
+#state['euxfel/agipd'] = {}
+#state['euxfel/agipd']['socket'] = 'tcp://10.253.0.52:4600'
+#state['euxfel/agipd']['source'] = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
 
+# Reading from individual raw AGIPD data source (panel 04)
+#state['euxfel/agipd'] = {}
+#state['euxfel/agipd']['socket'] = 'tcp://10.253.0.52:4601'
+#state['euxfel/agipd']['source'] = 'SPB_DET_AGIPD1M-1/DET/4CH0:xtdf'
+
+# Reading from individual raw AGIPD data source (panel 15)
+#state['euxfel/agipd'] = {}
+#state['euxfel/agipd']['socket'] = 'tcp://10.253.0.52:4602'
+#state['euxfel/agipd']['source'] = 'SPB_DET_AGIPD1M-1/DET/15CH0:xtdf'
 
 
 def onEvent(evt):
