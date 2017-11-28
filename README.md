@@ -25,18 +25,29 @@ You can always check the issue tracker on this repository and/or the Hummingbird
 
 ### AGIPD detector
 
-__Data of the entire detector (all panels) can be received from:__
+There are two ways of streaming data:
 
-       - Raw: tcp://10.253.0.51:4500
+__A) Data of the entire detector (all panels) - only events with FEL on (pulse count 64, number of frames: 30)__
+
+       - Raw: tcp://10.253.0.51:4500 
        - Corrected: tcp://10.253.0.51:4501
 
-       Note: Stream of only events with FEL on!
+       Key: SPB_DET_AGIPD1M-1
 
-__Data of the central (working) three modules can be received from:__
+       Shape: (16, 512, 128)
 
-       - Module 0: tcp://10.253/0.52:4600
-       - Module 1: tcp://10.253/0.52:4601
-       - Module 2: tcp://10.253/0.52:4602
+       Frame sequence: 0: FEL on / 1: FEL on / ... / 29: FEL on
 
-       Stream of all events: frame 0: garbage / frame 1: garbage / frame 2: FEL on / frame 3: FEL off / frame 4: FEL on / frame 5: FEL off ...)
+       Delay: ?
 
+__B) Data of the central (working) three modules - all events (pulse count: 64, number of frames: 64)__
+
+       - Module 3: tcp://10.253/0.52:4600 (key: SPB_DET_AGIPD1M-1/DET/3CH0:xtdf)
+       - Module 4: tcp://10.253/0.52:4601 (key: SPB_DET_AGIPD1M-1/DET/3CH0:xtdf)
+       - Module 15: tcp://10.253/0.52:4602 (key: SPB_DET_AGIPD1M-1/DET/3CH0:xtdf)
+
+       Shape: (512, 128)
+
+       Frame sequence: 0: garbage / 1: garbage / 2: FEL on / 3: FEL off / 4: FEL on / 5: FEL off / ... / 65: FEL off
+
+       Delay: ?
