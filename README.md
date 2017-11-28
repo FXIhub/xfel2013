@@ -30,7 +30,7 @@ __Data of the entire detector (all panels) can be received from:__
        - Raw: tcp://10.253.0.51:4500
        - Corrected: tcp://10.253.0.51:4501
 
-       Note: Stream of wnly events with FEL on!
+       Note: Stream of only events with FEL on!
 
 __Data of the central (working) three modules can be received from:__
 
@@ -38,5 +38,5 @@ __Data of the central (working) three modules can be received from:__
        - Module 1: tcp://10.253/0.52:4601
        - Module 2: tcp://10.253/0.52:4602
 
-       Stream of all events: (garbage / garbage / FEL on / FEL off / FEL on / FEL off ...)
+       Stream of all events: frame 0: garbage / frame 1: garbage / frame 2: FEL on / frame 3: FEL off / frame 4: FEL on / frame 5: FEL off ...)
 
