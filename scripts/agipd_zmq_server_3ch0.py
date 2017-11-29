@@ -37,7 +37,7 @@ def gen_combined_detector_data(source):
                         size=(_MOD_X, _MOD_Y))
     data = np.zeros(_SHAPE, dtype=np.uint16)  # np.float32)
     for pulse in range(_PULSES):
-        if pulse < 2 or pulse%2 != 0:
+        if pulse < 2 or pulse%2 == 0:
             data[:, :, 0, pulse] = rand_data()
             data[:, :, 1, pulse] = rand_data()
     cellId = np.array([i for i in range(_PULSES)], dtype=np.uint16)
