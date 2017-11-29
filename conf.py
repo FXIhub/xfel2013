@@ -4,9 +4,9 @@ import analysis.agipd
 
 # Reading from raw AGIPD data source
 #agipd_socket = 'tcp://10.253.0.51:4500'
-#agipd_socket = 'tcp://127.0.0.1:4500'
-#agipd_key = 'SPB_DET_AGIPD1M-1/DET'
-#agipd_format = 'combined'
+agipd_socket = 'tcp://127.0.0.1:4500'
+agipd_key = 'SPB_DET_AGIPD1M-1/DET'
+agipd_format = 'combined'
 
 # Reading from calibrated AGIPD data source
 #agipd_socket = 'tcp://10.253.0.51:4501'
@@ -15,9 +15,9 @@ import analysis.agipd
 
 # Reading from individual raw AGIPD data source (panel 03)
 #agipd_socket = 'tcp://10.253.0.52:4600'
-agipd_socket = 'tcp://127.0.0.1:4600'
-agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
-agipd_format = 'panel'
+#agipd_socket = 'tcp://127.0.0.1:4600'
+#agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
+#agipd_format = 'panel'
 
 # Reading from individual raw AGIPD data source (panel 04)
 #agipd_socket = 'tcp://10.253.0.52:4601'
@@ -54,15 +54,16 @@ def onEvent(evt):
     # Shape of AGIPD array
     print(evt['photonPixelDetectors'][agipd_key].data.shape)
 
-    # Get individual panels from the AGIPD
+    # Calibrate AGIPD data
     if agipd_format == 'panel':
-        #agipd_panel = evt['photonPixelDetectors'][agipd_key]
         agipd_data = analysis.agipd.getAGIPDCell(evt, evt['photonPixelDetectors'][agipd_key], cellID=3)        
     if agipd_format == 'combined':
-        agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key])        
+        agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key])
 
+    print(agipd_data.data[0,0])
+        
     # Plotting the AGIPD panel
-    plotting.image.plotImage(agipd_panel)
+    plotting.image.plotImage(agipd_data)
 
     # TODO: Add more ......
     # ....
