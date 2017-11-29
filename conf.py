@@ -6,8 +6,8 @@ do_offline = True
 
 # AGIPD configuration
 
-agipd_format = 'combined'
-#agipd_format = 'panel'
+#agipd_format = 'combined'
+agipd_format = 'panel'
 
 # For the combined format precalibrated data can be chosen
 do_precalibrate = False
@@ -15,6 +15,7 @@ do_calibrate = not do_precalibrate
 
 # Apply geometry
 do_assemble = True
+do_assemble = False
 
 # The central 3 working panels have the numbers 3, 4, 15
 agipd_panel = 3
@@ -31,11 +32,14 @@ else:
     
 if agipd_format == 'panel':
     # Reading from individual raw AGIPD data source
-    agipd_socket = '%s:460%i' % (tcp_prefix, agipd_panel)
-    agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf' % agipd_panel
+    if do_offline:
+        agipd_socket = '%s:4600' % (tcp_prefix)
+    else:
+        agipd_socket = '%s:460%i' % (tcp_prefix, agipd_panel)
+    agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
 elif agipd_format == 'combined':
     # Reading from raw AGIPD data source
-    if  do_precalibrate:
+    if do_precalibrate:
         agipd_socket = '%s:4501' % tcp_prefix
     else:
         agipd_socket = '%s:4500' % tcp_prefix
@@ -57,11 +61,13 @@ state['euxfel/agipd']['format'] = agipd_format
 this_dir = os.path.dirname(os.path.realpath(__file__))
 
 # Read calibration data
-fn_agipd_calib_list = ['%s/calib/Cheetah-AGIPD%02i-calib.h5' % (this_dir, panelID) for panelID in range(0, 16)]
+calib_dir = "%s/calib" % this_dir
+fn_agipd_calib_list = ['%s/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
 analysis.agipd.init_calib(filenames=fn_agipd_calib_list)
 
 # Read geometry data
-fn_agipd_geom = '%s/geometry/agipd_taw9_oy2_1050addu_hmg5.geom' % this_dir
+geom_dir = "%s/geometry" % this_dir
+fn_agipd_geom = '%s/agipd_taw9_oy2_1050addu_hmg5.geom' % (geom_dir)
 analysis.agipd.init_geom(filename=fn_agipd_geom)
 
 def onEvent(evt):
