@@ -19,7 +19,7 @@ _MOD_Y = 128
 _SHAPE = (_SAVED_PULSES, _MODULES, _MOD_X, _MOD_Y)
 #_SHAPE = (_MOD_X, _MOD_Y, 2, _PULSES)
 
-data_file = "/home/tekeberg/p002013/usr/Software/xfel2013/ch3_dump.p"
+data_file = "/gpfs/exfel/exp/SPB/201701/p002013/usr/ekeberg/data_simulation_template/dump_3ch0.p"
 with open(data_file, "rb") as file_handle:
     data_dict = pickle.load(file_handle)
     
@@ -59,5 +59,6 @@ def main(source, port):
 
 if __name__ == '__main__':
     source = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
-    port = sys.argv[1]
+    #source = 'SPB_DET_AGIPD1M-1/DET'
+    port = 4600
     main(source, port)
