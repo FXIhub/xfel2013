@@ -52,6 +52,7 @@ def gen_combined_detector_data(source):
     status = np.zeros(_PULSES, dtype=np.uint16)
     
     gen[source]['image.data'] = data
+    gen[source]['image.gain'] = np.ones(data.shape, dtype=np.uint16)
     gen[source]['image.cellId'] = cellId
     gen[source]['image.length'] = length
     gen[source]['image.pulseId'] = pulseId
