@@ -1,6 +1,6 @@
+import os
 import plotting.image
 import analysis.agipd
-
 
 # Reading from raw AGIPD data source
 #agipd_socket = 'tcp://10.253.0.51:4500'
@@ -36,6 +36,16 @@ state['euxfel/agipd']['socket'] = agipd_socket
 state['euxfel/agipd']['source'] = agipd_key
 state['euxfel/agipd']['format'] = agipd_format
 
+this_dir = os.path.dirname(os.path.realpath(__file__))
+
+# Read calibration data
+fn_agipd_calib = '%s/calib/Cheetah-AGIPD00-calib.h5' % this_dir
+analysis.agipd.init_calib(filename=fn_agipd_calib)
+
+# Read geometry data
+fn_agipd_geom = '%s/geometry/agipd_taw9_oy2_1050addu_hmg5.geom' % this_dir
+analysis.agipd.init_geom(filename=fn_agipd_geom)
+
 def onEvent(evt):
 
     # Available keys
@@ -46,9 +56,10 @@ def onEvent(evt):
 
     # Get individual panels from the AGIPD
     if agipd_format == 'panel':
-        agipd_panel = evt['photonPixelDetectors'][agipd_key]
+        #agipd_panel = evt['photonPixelDetectors'][agipd_key]
+        agipd_data = analysis.agipd.getAGIPDCell(evt, evt['photonPixelDetectors'][agipd_key], cellID=3)        
     if agipd_format == 'combined':
-        agipd_panel = analysis.agipd.get_panel(evt, evt['photonPixelDetectors'][agipd_key], 3)        
+        agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key])        
 
     # Plotting the AGIPD panel
     plotting.image.plotImage(agipd_panel)
