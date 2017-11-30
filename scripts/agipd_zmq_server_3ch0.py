@@ -40,10 +40,13 @@ def gen_combined_detector_data(source):
         if pulse < 2 or pulse%2 == 0:
             data[:, :, 0, pulse] = rand_data()
             data[:, :, 1, pulse] = rand_data()
-    cellId = np.ones(_PULSES, dtype=np.uint16) * np.iinfo(np.uint16).max
+            #data[:, :, 0, pulse] = pulse
+            #data[:, :, 1, pulse] = 1
+    cellId = np.array(range(_PULSES), dtype=np.uint64) // 2 + 1
+    print(cellId)
     length = np.ones(_PULSES, dtype=np.uint32) * int(131072)
     pulseId = np.array([i for i in range(_PULSES)], dtype=np.uint64)
-    cellId[(pulseId >= 2) * ((pulseId % 2) == 0) * (pulseId < 62)] = np.asarray(range(30), dtype=np.uint16)[:]
+    #cellId[(pulseId >= 2) * ((pulseId % 2) == 0) * (pulseId < 62)] = np.asarray(range(30), dtype=np.uint16)[:]
     trainId = np.ones(_PULSES, dtype=np.uint64) * int(tid)
     status = np.zeros(_PULSES, dtype=np.uint16)
     
@@ -126,5 +129,9 @@ def main(source, port):
 
 if __name__ == '__main__':
     source = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
+<<<<<<< HEAD
     port = 4600
     main(source, port)
+=======
+    main(source, 4600)
+>>>>>>> 78593e40a54e39f335d9b281021b7e188075e627
