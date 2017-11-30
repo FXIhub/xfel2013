@@ -17,6 +17,23 @@ agipd_format = 'panel'
 do_precalibrate = False
 do_calibrate = not do_precalibrate
 
+# Reading from raw AGIPD data source
+# agipd_socket = 'tcp://10.253.0.51:4500'
+# #agipd_socket = 'tcp://127.0.0.1:4500'
+# agipd_key = 'SPB_DET_AGIPD1M-1/DET'
+# agipd_format = 'combined'
+
+# Reading from calibrated AGIPD data source
+# agipd_socket = 'tcp://10.253.0.51:4501'
+# agipd_key = 'SPB_DET_AGIPD1M-1/DET'
+# agipd_format = 'combined'
+
+# # Reading from individual raw AGIPD data source (panel 03)
+#agipd_socket = 'tcp://10.253.0.52:4600'
+agipd_socket = 'tcp://127.0.0.1:4600'
+agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
+agipd_format = 'panel'
+
 # Apply geometry (only effective if agipd_format='combined')
 #do_assemble = True
 do_assemble = False
