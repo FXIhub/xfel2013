@@ -1,8 +1,9 @@
 import os
+import numpy as np
 import plotting.image
 import analysis.agipd
 
-do_offline = True
+do_offline = False
 
 # =================== #
 # AGIPD configuration #
@@ -20,12 +21,12 @@ do_calibrate = True
 
 # Apply geometry (only effective if agipd_format='combined')
 do_assemble = True
-#do_assemble = False
 
 # The central 3 working panels have the IDs 3, 4, 15
-agipd_panel = 3
+#agipd_panel = 3
 #agipd_panel = 4
-#agipd_panel = 15
+agipd_panel = 15
+agipd_panel_to_port = {3: 0, 4: 1, 15: 2}
 
 # Determine the data source
 if do_offline:
@@ -40,8 +41,8 @@ if agipd_format == 'panel':
     if do_offline:
         agipd_socket = '%s:4600' % (tcp_prefix)
     else:
-        agipd_socket = '%s:460%i' % (tcp_prefix, agipd_panel)
-    agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
+        agipd_socket = '%s:460%i' % (tcp_prefix, agipd_panel_to_port[agipd_panel])
+    agipd_key = 'SPB_DET_AGIPD1M-1/DET/%iCH0:xtdf' % agipd_panel
 elif agipd_format == 'combined':
     # Reading from raw AGIPD data source
     if do_precalibrate:
@@ -77,14 +78,14 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 # Read calibration data (one file per panel)
 calib_dir = "%s/calib" % this_dir
 if not os.path.exists(calib_dir):
-    calib_dir = "/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib"
+    calib_dir = "/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/r0030"
 fn_agipd_calib_list = ['%s/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
 analysis.agipd.init_calib(filenames=fn_agipd_calib_list)
 
 # Read geometry data
 geom_dir = "%s/geometry" % this_dir
 fn_agipd_geom = '%s/agipd_taw9_oy2_1050addu_hmg5.geom' % (geom_dir)
-analysis.agipd.init_geom(filename=fn_agipd_geom)
+analysis.agipd.init_geom(filename=fn_agipd_geom, rot180=True)
 
 # ============ #
 # onEvent call #
@@ -112,10 +113,10 @@ def onEvent(evt):
     agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
                                          cellID=cellId, panelID=agipd_panel,
                                          calibrate=do_calibrate, assemble=do_assemble)
-    print(agipd_data.data.mean())
-    
+    print(np.median(agipd_data.data))
+    print(agipd_data.data.shape)
     # Plotting the AGIPD panel
-    plotting.image.plotImage(agipd_data)
+    plotting.image.plotImage(agipd_data)#, vmin=0, vmax=3000)
     #plotting.image.plotImage(evt['photonPixelDetectors'][agipd_key])
 
     # TODO: Add more ......
