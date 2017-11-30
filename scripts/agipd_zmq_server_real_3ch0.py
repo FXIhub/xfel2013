@@ -5,7 +5,7 @@ import msgpack_numpy
 msgpack_numpy.patch()
 import numpy as np
 from time import sleep, time
-import sys
+import sys, os
 from threading import Thread
 import zmq
 import pickle
@@ -20,6 +20,14 @@ _SHAPE = (_SAVED_PULSES, _MODULES, _MOD_X, _MOD_Y)
 #_SHAPE = (_MOD_X, _MOD_Y, 2, _PULSES)
 
 data_file = "/gpfs/exfel/exp/SPB/201701/p002013/usr/ekeberg/data_simulation_template/dump_3ch0.p"
+
+if not os.path.exists(data_file):
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    data_file = "%s/../data/dump_3ch0.p" % this_dir
+
+if not os.path.exists(data_file):
+    print("ERROR: Cannot find data file!")
+    
 with open(data_file, "rb") as file_handle:
     data_dict = pickle.load(file_handle)
     
