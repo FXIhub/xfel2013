@@ -129,9 +129,5 @@ def main(source, port):
 
 if __name__ == '__main__':
     source = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
-<<<<<<< HEAD
     port = 4600
     main(source, port)
-=======
-    main(source, 4600)
->>>>>>> 78593e40a54e39f335d9b281021b7e188075e627
