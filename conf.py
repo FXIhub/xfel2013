@@ -8,6 +8,8 @@ do_offline = True
 # AGIPD configuration #
 # =================== #
 
+cellId_allowed_range = range(0, 30)
+
 #agipd_format = 'combined'
 agipd_format = 'panel'
 
@@ -86,6 +88,12 @@ analysis.agipd.init_geom(filename=fn_agipd_geom)
 # ============ #
 
 def onEvent(evt):
+
+    cellId = evt['eventID']['Timestamp'].cellId
+    pulseId = evt['eventID']['Timestamp'].pulseId
+    if cellId not in cellId_allowed_range:
+        print("WARNING: Skip event pulseId=%i. cellId=%i out of allowed range." %  (pulseId, cellId))
+        return
     
     # Available keys
     #print("Available keys: " + str(evt.keys()))
@@ -95,7 +103,7 @@ def onEvent(evt):
     
     # Calibrate AGIPD data
     agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
-                                         cellID=evt['eventID']['Timestamp'].cellId, panelID=agipd_panel,
+                                         cellID=cellId, panelID=agipd_panel,
                                          calibrate=do_calibrate, assemble=do_assemble)
     
     # Plotting the AGIPD panel
