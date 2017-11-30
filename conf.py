@@ -15,7 +15,8 @@ agipd_format = 'panel'
 
 # For the combined format precalibrated data can be selected from Karabo
 do_precalibrate = False
-do_calibrate = not do_precalibrate
+#do_calibrate = not do_precalibrate
+do_calibrate = False
 
 # Apply geometry (only effective if agipd_format='combined')
 #do_assemble = True
@@ -75,6 +76,8 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 
 # Read calibration data (one file per panel)
 calib_dir = "%s/calib" % this_dir
+if not os.path.exists(calib_dir):
+    calib_dir = "/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib"
 fn_agipd_calib_list = ['%s/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
 analysis.agipd.init_calib(filenames=fn_agipd_calib_list)
 
@@ -94,6 +97,8 @@ def onEvent(evt):
     if cellId not in cellId_allowed_range:
         print("WARNING: Skip event pulseId=%i. cellId=%i out of allowed range." %  (pulseId, cellId))
         return
+    else:
+        print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
     
     # Available keys
     #print("Available keys: " + str(evt.keys()))

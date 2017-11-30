@@ -126,5 +126,5 @@ def main(source, port):
 
 if __name__ == '__main__':
     source = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
-    port = sys.argv[1]
+    port = 4600
     main(source, port)
