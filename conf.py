@@ -117,7 +117,8 @@ def onEvent(evt):
     # Available keys
     #print("Available keys: " + str(evt.keys()))
     #print("Available slow data keys: " + str(evt['slowData'].keys()))
-    print("Available slow data keys: " + str(evt['slowData']['full_dict'].data.keys()))
+    print("Available slow data keys: " + str(evt['slowData'].keys()))
+    #print("Available slow data keys: ",(evt['slowData']['injposX']))
     #import pickle, sys
     #pickle.dump(evt['slowData']['full_dict'].data, open('./slowdata.p', 'wb'))
     #sys.exit(1)
