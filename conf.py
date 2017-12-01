@@ -57,6 +57,16 @@ hitscoreThreshold = 1000
 
 def onEvent(evt):
 
+    # Available keys
+    #print("Available keys: " + str(evt.keys()))
+    #print("Available slow data keys: " + str(evt['slowData'].keys()))
+    print("Available slow data keys: " + str(evt['slowData'].keys()))
+    #print("Available slow data keys: ",(evt['slowData']['injposX']))
+    #import pickle, sys
+    #pickle.dump(evt['slowData']['full_dict'].data, open('./slowdata.p', 'wb'))
+    #sys.exit(1)
+
+
     native_cellId = evt['eventID']['Timestamp'].cellId
     
     cellId = native_cellId // 2 - 1
@@ -69,14 +79,6 @@ def onEvent(evt):
     else:
         print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
     
-    # Available keys
-    #print("Available keys: " + str(evt.keys()))
-    #print("Available slow data keys: " + str(evt['slowData'].keys()))
-    print("Available slow data keys: " + str(evt['slowData'].keys()))
-    #print("Available slow data keys: ",(evt['slowData']['injposX']))
-    #import pickle, sys
-    #pickle.dump(evt['slowData']['full_dict'].data, open('./slowdata.p', 'wb'))
-    #sys.exit(1)
     
     # Shape of AGIPD array
     #print(evt['photonPixelDetectors'][agipd_key].data.shape)
