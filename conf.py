@@ -8,8 +8,8 @@ from backend import add_record
 
 from conf_xfel2013 import *
 
-#do_offline = True
-do_offline = False
+do_offline = True
+#do_offline = False
 
 # =================== #
 # AGIPD configuration #
