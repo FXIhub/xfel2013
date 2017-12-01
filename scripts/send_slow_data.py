@@ -7,18 +7,30 @@ import time
 import pickle
 from threading import Thread
 
+loud = False
+
 SOURCE = "tcp://10.253.0.52:4700"
 OUTPUT_PORT = 4700
+# exflonc09: 10.253.0.67
+OUTPUT = "tcp://10.253.0.67:%i" % OUTPUT_PORT
+#OUTPUT = 'tcp://*:{}'.format(OUTPUT_PORT)
 
-print(SOURCE)
+print("Source socket: %s" % SOURCE)
+print("Output socket: %s" % OUTPUT)
 
 recv_context = zmq.Context()
 recv_request = recv_context.socket(zmq.REQ)
 recv_request.connect(SOURCE)
-data_container = {'xgm_xtd2':None,
-                  'injposX':None,
-                  'injposY':None,
-                  'injposZ':None}
+data_container = {
+    'injposX': None,
+    'injposY': None,
+    'injposZ': None,
+    'xgm_xtd2': None,
+    'xgm_xtd9': None,
+    'cam_ehc_scr': None,
+    'cam_inline': None,
+    'cam_ehd_ibs': None,
+}
 
 def fill_data_into_container(data):
     #print(data.keys())
@@ -26,34 +38,32 @@ def fill_data_into_container(data):
     try:
         injposx = data['SPB_IRU_INJMOV/MOTOR/X']['actualPosition']
         data_container['injposX'] = injposx
-        print("x=%f" % injposx)
+        if loud: print("x=%f" % injposx)
     except:
         print("No injector motor X in the data")
     try:
         injposy = data['SPB_IRU_INJMOV/MOTOR/Y']['actualPosition']
         data_container['injposY'] = injposy
-        print("y=%f" % injposy)
+        if loud: print("y=%f" % injposy)
     except:
         print("No injector motor Y in the data")
     try:
         injposz = data['SPB_IRU_INJMOV/MOTOR/Z']['actualPosition']
         data_container['injposZ'] = injposz
-        print("z=%f" % injposz)
+        if loud: print("z=%f" % injposz)
     except:
         print("No injector motor Z in the data")
     # GMD
     try:
         xgm_xtd2 = data['SA1_XTD2_XGM/XGM/DOOCS']['pulseEnergy.pulseEnergy'] # in uJ
         data_container['xgm_xtd2'] = xgm_xtd2
-        print("XGM_XTD2 = %f uJ" % xgm_xtd2)
+        if loud: print("XGM_XTD2 = %f uJ" % xgm_xtd2)
     except:
         print("No XGM_XTD2 in the data.")
-    if True:
-        return
     try:
         xgm_xtd9 = data['SPB_XTD9_XGM/XGM/DOOCS']['pulseEnergy.pulseEnergy'] # in uJ
         data_container['xgm_xtd9'] = xgm_xtd9
-        print("XGM_XTD9 = %f uJ" % xgm_xtd9)
+        if loud: print("XGM_XTD9 = %f uJ" % xgm_xtd9)
     except:
         print("No XGM_XTD9 in the data.")
     # Cameras
@@ -73,31 +83,27 @@ def fill_data_into_container(data):
     except:
         print("No EHD_IBS camera data.")
 
-
-
 def recv_data(recv_request, data_container):
     while(True):
-        print("recv", data_container.keys())
+        if loud: print("recv", data_container.keys())
         recv_request.send(b"next")
         msg = recv_request.recv()
         data = msgpack.loads(msg)
         fill_data_into_container(data)
         time.sleep(0.1)
 
-print("Create context")
 send_context = zmq.Context()
 send_socket = send_context.socket(zmq.REP)
-send_socket.bind('tcp://*:{}'.format(OUTPUT_PORT))
+send_socket.bind(OUTPUT)
 
 t = Thread(target=recv_data, args=(recv_request, data_container))
 t.start()
-    
+
 while True:
     msg = send_socket.recv()
-    print(msg)
-    if msg == 'next':
-        print("send", data_container.keys())
+    if msg == b'next':
+        if loud: print("send", data_container.keys())
         send_socket.send(msgpack.dumps(data_container))
     else:
-        print('wrong request')
+        print('WARNING: wrong request')
         break
