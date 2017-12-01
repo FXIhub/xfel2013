@@ -9,16 +9,20 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 
 # Read calibration data (one file per panel)
 calib_dir = "%s/calib" % this_dir
-fn_agipd_calib_list = ['%s/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
+if not os.path.exists(calib_dir):
+    calib_dir = '/gpfs/p002013/usr/Shared/calib'
+fn_agipd_calib_list = ['%s/r0030/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
 analysis.agipd.init_calib(filenames=fn_agipd_calib_list)
 
 # Read geometry data
 geom_dir = "%s/geometry" % this_dir
+if not os.path.exists(geom_dir):
+    geom_dir = '/gpfs/p002013/usr/Shared/geometry'
 fn_agipd_geom = '%s/agipd_taw9_oy2_1050addu_hmg5.geom' % (geom_dir)
-analysis.agipd.init_geom(filename=fn_agipd_geom)
+analysis.agipd.init_geom(filename=fn_agipd_geom, rot180=True)
 
 
-def get_agipd_source(agipd_format, agipd_panel, do_offline, do_precalibrate=False):
+def get_agipd_source(agipd_format, agipd_panel, do_offline, do_assemble, do_calibrate, do_precalibrate=False):
     # Determine the data source
     if do_offline:
         tcp_prefix = 'tcp://127.0.0.1'
