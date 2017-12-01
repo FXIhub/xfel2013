@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+'''
+Offline event getter
+Author: Kartik Ayyer, Filipe Maia
+'''
+
 import sys
 import h5py
 import numpy as np

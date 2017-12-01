@@ -12,6 +12,7 @@ Short script to update calibration files with high gain darks using
 a specified dark run number.
 
 (Currently only uses 250 trains (251-500) to calculate mean signal)
+Authors: Kartik Ayyer, Filipe Maia
 '''
 
 if len(sys.argv) < 2:
