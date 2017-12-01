@@ -4,6 +4,7 @@ import plotting.image
 import plotting.line
 import analysis.agipd
 import analysis.hitfinding
+from backend import add_record
 
 do_offline = False
 
@@ -125,26 +126,55 @@ def onEvent(evt):
     
     # Shape of AGIPD array
     #print(evt['photonPixelDetectors'][agipd_key].data.shape)
-    
+
+    # Raw gain values
+    raw_15_gain = evt['photonPixelDetectors'][agipd_key].data[1,15]
+    raw_15_gain = add_record(evt['analysis'], 'analysis', 'raw_gain_panel_15', raw_15_gain)
+
     # Calibrate AGIPD data (assembled)
     agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
                                          cellID=cellId, panelID=agipd_panel,
                                          calibrate=do_calibrate, assemble=do_assemble)
     
+    # Calibrate AGIPD data (panel 03)
+    agipd_03_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
+                                            cellID=cellId, panelID=3,
+                                            calibrate=do_calibrate, assemble=False)
+  
     # Calibrate AGIPD data (panel 04)
     agipd_04_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
                                             cellID=cellId, panelID=4,
                                             calibrate=do_calibrate, assemble=False)
+  
+    # Calibrate AGIPD data (panel 15)
+    agipd_15_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
+                                            cellID=cellId, panelID=15,
+                                            calibrate=do_calibrate, assemble=False)
+  
     
+    # Filtering on AGIPD panel 15, reject events which have negative maximima
+    if (agipd_15_data.data.max() < 0):
+        return
+    # Plotting the raw gain for panel 15
+    plotting.image.plotImage(agipd_15_data)#, vmin=0, vmax=3000)
+    plotting.image.plotImage(raw_15_gain)#, vmin=0, vmax=3000)
+
+    # Filtering on AGIPD panel 03, reject events which have negative maximima
+    if (agipd_03_data.data.max() < 0):
+        return
+    # Plotting the AGIPD panel 03
+    plotting.image.plotImage(agipd_03_data)#, vmin=0, vmax=3000)
+
     # Filtering on AGIPD panel 04, reject events which have negative maximima
     if (agipd_04_data.data.max() < 0):
         return
-
-    # Plotting the AGIPD panel
+    # Plotting the AGIPD panel 04
     plotting.image.plotImage(agipd_04_data)#, vmin=0, vmax=3000)
 
     # Plotting the full AGIPD (assembled)
     plotting.image.plotImage(agipd_data)#, vmin=0, vmax=3000)
+    # Plotting the full AGIPD (assembled) Log scale
+    plotting.image.plotImage(agipd_data, log=True, name="AGIPD_assembled (Log)")#, vmin=0, vmax=3000)
 
     # Do hitfinding on the AGIPD panel 04
     analysis.hitfinding.countLitPixels(evt, agipd_04_data, aduThreshold=aduThreshold, hitscoreThreshold=hitscoreThreshold)
@@ -159,5 +189,5 @@ def onEvent(evt):
         print("We have a hit")
 
         # Plotting the full AGIPD (assembled) for hits only
-        plotting.image.plotImage(agipd_data, label='AGIPD assembled (hits)')#, vmin=0, vmax=3000)
+        #plotting.image.plotImage(agipd_data, name='AGIPD assembled (hits)')#, vmin=0, vmax=3000)
 
