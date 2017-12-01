@@ -1,5 +1,8 @@
 #!/bin/bash
 
+module add mpi
+module add anaconda/3
+
 export PATH=/gpfs/exfel/exp/SPB/201701/p002013/usr/Software/python-packages/bin:$PATH
 export PYTHONPATH=/gpfs/exfel/exp/SPB/201701/p002013/usr/Software/python-packages/lib/python2.7/site-packages:$PYTHONPATH
 export PYTHONPATH=/gpfs/exfel/exp/SPB/201701/p002013/usr/Software/python-packages/lib/python3.5/site-packages:$PYTHONPATH
@@ -8,6 +11,3 @@ export C_INCLUDE_PATH=/gpfs/exfel/exp/SPB/201701/p002013/usr/Software/python-pac
 export CPLUS_INCLUDE_PATH=/gpfs/exfel/exp/SPB/201701/p002013/usr/Software/python-packages/include:$CPLUS_INCLUDE_PATH
 
 export PATH=/gpfs/exfel/exp/SPB/201701/p002013/usr/Software/hummingbird:$PATH
-
-module add mpi
-module add anaconda/3
