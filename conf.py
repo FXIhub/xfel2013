@@ -153,20 +153,20 @@ def onEvent(evt):
   
     
     # Filtering on AGIPD panel 15, reject events which have negative maximima
-    if (agipd_15_data.data.max() < 0):
+    if (agipd_15_data.data.max() <= 0):
         return
     # Plotting the raw gain for panel 15
     plotting.image.plotImage(agipd_15_data)#, vmin=0, vmax=3000)
     plotting.image.plotImage(raw_15_gain)#, vmin=0, vmax=3000)
 
     # Filtering on AGIPD panel 03, reject events which have negative maximima
-    if (agipd_03_data.data.max() < 0):
+    if (agipd_03_data.data.max() <= 0):
         return
     # Plotting the AGIPD panel 03
     plotting.image.plotImage(agipd_03_data)#, vmin=0, vmax=3000)
 
     # Filtering on AGIPD panel 04, reject events which have negative maximima
-    if (agipd_04_data.data.max() < 0):
+    if (agipd_04_data.data.max() <= 0):
         return
     # Plotting the AGIPD panel 04
     plotting.image.plotImage(agipd_04_data)#, vmin=0, vmax=3000)
