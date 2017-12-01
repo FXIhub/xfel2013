@@ -1,3 +1,7 @@
+'''
+CrystFEL geometry file conversion scripts
+Author: Andrew Morgan
+'''
 
 from __future__ import absolute_import
 from __future__ import division
