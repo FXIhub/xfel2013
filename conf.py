@@ -57,12 +57,13 @@ state['euxfel/agipd']['socket'] = agipd_socket
 state['euxfel/agipd']['source'] = agipd_key
 state['euxfel/agipd']['format'] = agipd_format
 
-# exflonc05: 10.253.0.63
-# exflonc09: 10.253.0.67
-# exflonc10: 10.253.0.68
-# exflonc11: 10.253.0.69
-state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
-print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
+if not do_offline:
+    # exflonc05: 10.253.0.63
+    # exflonc09: 10.253.0.67
+    # exflonc10: 10.253.0.68
+    # exflonc11: 10.253.0.69
+    state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
+    print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 400
 hitscoreThreshold = 1000

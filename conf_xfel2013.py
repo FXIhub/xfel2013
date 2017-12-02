@@ -10,8 +10,8 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 # Read calibration data (one file per panel)
 calib_dir = "%s/calib" % this_dir
 if not os.path.exists(calib_dir):
-    calib_dir = '/gpfs/p002013/usr/Shared/calib'
-fn_agipd_calib_list = ['%s/r0030/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
+    calib_dir = '/gpfs/p002013/usr/Shared/calib/r0030'
+fn_agipd_calib_list = ['%s/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]
 analysis.agipd.init_calib(filenames=fn_agipd_calib_list)
 
 # Read geometry data
