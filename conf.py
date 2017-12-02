@@ -13,9 +13,6 @@ import conf_xfel2013
 imp.reload(conf_xfel2013)
 from conf_xfel2013 import *
 
-#do_offline = True
-do_offline = False
-
 # =================== #
 # AGIPD configuration #
 # =================== #
@@ -41,7 +38,6 @@ do_assemble = True
 # Get socket and key depending on operation mode
 agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format, 
                                            agipd_panel=agipd_panel, 
-                                           do_offline=do_offline, 
                                            do_assemble=do_assemble, 
                                            do_calibrate=do_calibrate, 
                                            do_precalibrate=do_precalibrate)
@@ -57,7 +53,7 @@ state['euxfel/agipd']['socket'] = agipd_socket
 state['euxfel/agipd']['source'] = agipd_key
 state['euxfel/agipd']['format'] = agipd_format
 
-if not do_offline:
+if run_online:
     # exflonc05: 10.253.0.63
     # exflonc09: 10.253.0.67
     # exflonc10: 10.253.0.68
@@ -80,16 +76,9 @@ def onEvent(evt):
     #print("Available slow data keys: " + str(evt['slowData'].keys()))
     #print("Available slow data keys: " + str(evt['slowData'].keys()))
     #print("Available slow data keys: ",(evt['slowData']['injposX']))
-    #import pickle, sys
-    #pickle.dump(evt['slowData']['full_dict'].data, open('./slowdata.p', 'wb'))
-    #sys.exit(1)
 
     native_cellId = evt['eventID']['Timestamp'].cellId
-    
-    #print(evt['photonPixelDetectors'].keys())
     cellId = native_cellId // 2 - 1
-    #print(cellId)
-
     pulseId = evt['eventID']['Timestamp'].pulseId
     if cellId != 0:
         return
@@ -98,7 +87,6 @@ def onEvent(evt):
         return
     else:
         print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
-    
     
     # Shape of AGIPD array
     #print(evt['photonPixelDetectors'][agipd_key].data.shape)
@@ -180,6 +168,6 @@ def onEvent(evt):
                 print("no")
         
         cam_inline = evt['slowData']['cam_inline']
-        # Filter out bad frames, the criteria is somewhat dangerous as we might melt the cam without even seeing
+        # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
         if cam_inline.data.max() != 65535:
             plotting.image.plotImage(cam_inline)
