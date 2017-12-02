@@ -104,8 +104,8 @@ class AGIPD_Combiner():
         threshold = self.calib[module]['DigitalGainLevel'][:,cell]
         high_gain = gain < threshold[1]
         low_gain = gain > threshold[2]
-        medium_gain =  ~high_gain * ~low_gain
-        return low_gain*2+medium_gain*1
+        medium_gain = (~high_gain) * (~low_gain)
+        return low_gain*2 + medium_gain
 
     def _get_frame(self, num, type='frame', calibrate=False, threshold=False, sync=True, assemble=True):
         if num > self.nframes or num < 0:
@@ -244,10 +244,11 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Format: %s <run_number>'%sys.argv[0])
         sys.exit(1)
-    path = '/gpfs/exfel/exp/SPB/201701/p002013/raw/r%.4d' % int(sys.argv[1])
-    print('Calculating powder sum from', path)
+    run = int(sys.argv[1])
+    print('Calculating powder sum for run %d'%run)
     
-    c = AGIPD_Combiner(path, good_cells=list(range(2,30,2)))
+    #c = AGIPD_Combiner(int(sys.argv[1]), good_cells=list(range(2,62,2)))
+    c = AGIPD_Combiner(int(sys.argv[1]), good_cells=[2])
     c.get_powder()
     
     import os
