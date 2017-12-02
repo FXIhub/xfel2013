@@ -18,7 +18,7 @@ trainid_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/trainId'
 good_cells = range(2,62,2)
 num_h5cells = 64
 litpix_threshold = 40
-num_threads = 40
+num_threads = 80
 
 run = int(sys.argv[1])
 folder = '/gpfs/exfel/exp/SPB/201701/p002013/raw/r%.4d/'%run
@@ -36,6 +36,27 @@ litpix = np.empty((0,), dtype='i4')
 trainids = np.empty((0,), dtype='u8')
 cellids = np.empty((0,), dtype='u8')
 
+def threshold(digital, cell):        
+    thresh = gain_threshold[:,cell]
+    high_gain = digital < thresh[1]
+    low_gain = digital > thresh[2]
+    medium_gain = (~high_gain) * (~low_gain)
+    return low_gain*2 + medium_gain
+
+def calibrate(data, digital, cell):        
+    gain_mode = threshold(digital, cell)
+    o = np.empty(gain_mode.shape)
+    g = np.empty(gain_mode.shape)
+    b = np.empty(gain_mode.shape)
+    for i in range(3):
+        o[gain_mode==i] = offset[i,cell][gain_mode==i]
+        g[gain_mode==i] = gain[i,cell][gain_mode==i]
+        b[gain_mode==i] = badpix[i,cell][gain_mode==i]
+
+    data = (np.float32(data) - o)*g
+    data[b != 0] = 0
+    return data
+
 def litpix_worker(rank, fname, num_trains, litpix, trainids, cellids):
     np_litpix = np.frombuffer(litpix.get_obj(), 'i4')
     np_trainids = np.frombuffer(trainids.get_obj(), 'u8')
@@ -49,9 +70,9 @@ def litpix_worker(rank, fname, num_trains, litpix, trainids, cellids):
 
         analog = fp[dset_name][h5start:h5end, 0][good_cells]
         digital = fp[dset_name][h5start:h5end, 1][good_cells]
-        high_gain = (digital < gain_threshold[1])
-        analog = (analog-offset[0])*gain[0]*(badpix[0]==0)
-        np_litpix[start:end] += (~high_gain).sum((1,2)) + (high_gain & (analog > litpix_threshold)).sum((1,2))
+        for j in range(len(good_cells)):
+            data = calibrate(analog[j], digital[j], j)
+            np_litpix[start+j] = (data[384:]>litpix_threshold).sum()
         np_trainids[start:end] = fp[trainid_name][h5start:h5end][good_cells].flatten()
         np_cellids[start:end] = fp[cellid_name][h5start:h5end][good_cells].flatten()
         if rank == 0:
@@ -78,7 +99,6 @@ for fname in flist:
     litpix = np.concatenate((litpix, np.frombuffer(litpix_array.get_obj(), 'i4')))
     trainids = np.concatenate((trainids, np.frombuffer(trainids_array.get_obj(), 'u8')))
     cellids = np.concatenate((cellids, np.frombuffer(cellids_array.get_obj(), 'u8')))
-sys.stderr.write('\n')
 
 os.makedirs('data', exist_ok=True)
 with h5py.File('data/hits_r%.4d.h5'%run, 'w') as f:
