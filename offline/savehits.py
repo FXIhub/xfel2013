@@ -9,6 +9,7 @@ if len(sys.argv) < 2:
 run = int(sys.argv[1])
 
 good_cells = range(2,62,2)
+num_h5cells = 64
 
 with h5py.File('data/hits_r%.4d.h5'%run, 'r') as f:
     litpix = f['hitFinding/litPixels'][:]
@@ -19,6 +20,8 @@ indices = np.where((litpix.reshape(-1, len(good_cells)) > thresh).flatten())[0]
 c = combine_modules.AGIPD_Combiner(run)
 frame_shape = c.get_frame(0).shape
 unassembled_shape = c.get_frame(0, assemble=False).shape
+print(len(indices))
+#shifts = np.array([c.get_frame_id(ind)['shift'][15] for ind in indices])
 
 with h5py.File('data/hits_r%.4d.h5'%run, 'a') as f:
     if 'hits' in f:
@@ -29,8 +32,14 @@ with h5py.File('data/hits_r%.4d.h5'%run, 'a') as f:
     f['hits/indices'] = indices
     f['hits/litPixels'] = litpix[indices]
     for i, num in enumerate(indices):
-        f['hits/assembled'][i] = c.get_frame(num, calibrate=True)
-        f['hits/unassembled'][i] = c.get_frame(num, calibrate=True, assemble=False)
+        shift = c.get_frame_id(num)['shift'][15] // num_h5cells * len(good_cells)
+        if shift > num:
+            f['hits/assembled'][i] = np.zeros(frame_shape)
+            f['hits/unassembled'][i] = np.zeros(unassembled_shape)
+        else:
+            f['hits/assembled'][i] = c.get_frame(num - shift, calibrate=True)
+            f['hits/unassembled'][i] = c.get_frame(num - shift, calibrate=True, assemble=False)
+        f['hits/indices'][i] = num - shift
         sys.stderr.write('\r%d/%d'%(i+1, len(indices)))
 sys.stderr.write('\n')
 
