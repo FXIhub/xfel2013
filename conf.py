@@ -13,8 +13,8 @@ import conf_xfel2013
 imp.reload(conf_xfel2013)
 from conf_xfel2013 import *
 
-do_offline = True
-#do_offline = False
+#do_offline = True
+do_offline = False
 
 # =================== #
 # AGIPD configuration #
@@ -50,10 +50,10 @@ state['euxfel/agipd'] = {}
 state['euxfel/agipd']['socket'] = agipd_socket
 state['euxfel/agipd']['source'] = agipd_key
 state['euxfel/agipd']['format'] = agipd_format
-# exflonc09: 10.253.0.67
-state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
-
-print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
+if not do_offline:
+    # exflonc09: 10.253.0.67
+    state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
+    print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 400
 hitscoreThreshold = 1000
