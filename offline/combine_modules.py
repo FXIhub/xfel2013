@@ -146,9 +146,14 @@ class AGIPD_Combiner():
                     if sync:
                         if i == self.first_module:
                             trainid = f[train_name][frame_num].astype('i8')[0]
+                            cellid = f[cell_name][frame_num].astype('i8')[0]
                             shift = 0
                         else:
                             shift = (trainid - f[train_name][frame_num].astype('i8')[0]) * self.num_h5cells
+                            shift += (cellid - f[cell_name][frame_num].astype('i8')[0])
+                        if frame_num+shift > f[dset_name].shape[0]:
+                            print('Not syncing in last train')
+                            shift = 0
                     data = f[dset_name][frame_num+shift, type_ind]
                     if calibrate:
                         data = self._calibrate(data,
@@ -192,12 +197,24 @@ class AGIPD_Combiner():
             frame_num = ind - self.nframes_list[file_num-1]
         with h5py.File(self.flist[self.first_module][file_num], 'r') as f:
             cell_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/cellId'%self.first_module
-            pulse_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/cellId'%self.first_module
+            pulse_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/pulseId'%self.first_module
             train_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/trainId'%self.first_module
             train_id = f[train_name][frame_num][0]
             pulse_id = f[pulse_name][frame_num][0]
             cell_id = f[cell_name][frame_num][0]
-        return train_id, cell_id, pulse_id
+
+        shifts = np.zeros((16,), dtype='i8')
+        for i in range(16):
+            with h5py.File(self.flist[i][file_num], 'r') as f:
+                cell_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/cellId'%i
+                train_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/trainId'%i
+                shifts[i] = (train_id - f[train_name][frame_num].astype('i8')[0]) * self.num_h5cells
+                shifts[i] += (cell_id - f[cell_name][frame_num].astype('i8')[0])
+            
+        return {'train_id': train_id, 
+                'cell_id': cell_id, 
+                'pulse_id': pulse_id,
+                'shift': shifts}
 
     def get_frame(self, num, calibrate=False, sync=True, assemble=True):
         return self._get_frame(num, type='frame', calibrate=calibrate, sync=sync, assemble=assemble)
