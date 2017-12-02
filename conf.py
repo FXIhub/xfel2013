@@ -1,15 +1,17 @@
-import os
+import os, sys
 import numpy as np
 import plotting.image
 import plotting.line
 import analysis.agipd
 import analysis.hitfinding
+import imp
 from backend import add_record
 
+this_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, this_dir)
+import conf_xfel2013
+imp.reload(conf_xfel2013)
 from conf_xfel2013 import *
-
-#do_offline = True
-do_offline = False
 
 # =================== #
 # AGIPD configuration #
@@ -33,8 +35,12 @@ do_calibrate = True
 # Apply geometry (only effective if agipd_format='combined')
 do_assemble = True
 
-
-agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format, agipd_panel=agipd_panel, do_offline=do_offline, do_precalibrate=do_precalibrate)
+# Get socket and key depending on operation mode
+agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format, 
+                                           agipd_panel=agipd_panel, 
+                                           do_assemble=do_assemble, 
+                                           do_calibrate=do_calibrate, 
+                                           do_precalibrate=do_precalibrate)
 
 # =============== #
 # State variables #
@@ -46,7 +52,14 @@ state['euxfel/agipd'] = {}
 state['euxfel/agipd']['socket'] = agipd_socket
 state['euxfel/agipd']['source'] = agipd_key
 state['euxfel/agipd']['format'] = agipd_format
-state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.64:4700"
+
+if run_online:
+    # exflonc05: 10.253.0.63
+    # exflonc09: 10.253.0.67
+    # exflonc10: 10.253.0.68
+    # exflonc11: 10.253.0.69
+    state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
+    print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 400
 hitscoreThreshold = 1000
@@ -57,18 +70,14 @@ hitscoreThreshold = 1000
 
 def onEvent(evt):
 
+
     # Available keys
     #print("Available keys: " + str(evt.keys()))
     #print("Available slow data keys: " + str(evt['slowData'].keys()))
-    print("Available slow data keys: " + str(evt['slowData'].keys()))
+    #print("Available slow data keys: " + str(evt['slowData'].keys()))
     #print("Available slow data keys: ",(evt['slowData']['injposX']))
-    #import pickle, sys
-    #pickle.dump(evt['slowData']['full_dict'].data, open('./slowdata.p', 'wb'))
-    #sys.exit(1)
-
 
     native_cellId = evt['eventID']['Timestamp'].cellId
-    
     cellId = native_cellId // 2 - 1
     pulseId = evt['eventID']['Timestamp'].pulseId
     if cellId != 0:
@@ -79,7 +88,6 @@ def onEvent(evt):
     else:
         print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
     
-    
     # Shape of AGIPD array
     #print(evt['photonPixelDetectors'][agipd_key].data.shape)
 
@@ -89,7 +97,7 @@ def onEvent(evt):
 
     # Calibrate AGIPD data (assembled)
     agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
-                                         cellID=cellId, panelID=agipd_panel,
+                                         cellID=cellId, panelID=None,
                                          calibrate=do_calibrate, assemble=do_assemble)
     
     # Calibrate AGIPD data (panel 03)
@@ -112,25 +120,28 @@ def onEvent(evt):
     if (agipd_15_data.data.max() <= 0):
         return
     # Plotting the raw gain for panel 15
-    plotting.image.plotImage(agipd_15_data)#, vmin=0, vmax=3000)
-    plotting.image.plotImage(raw_15_gain)#, vmin=0, vmax=3000)
+    #plotting.image.plotImage(agipd_15_data)#, vmin=0, vmax=3000)
+    #plotting.image.plotImage(raw_15_gain)#, vmin=0, vmax=3000)
 
     # Filtering on AGIPD panel 03, reject events which have negative maximima
     if (agipd_03_data.data.max() <= 0):
         return
     # Plotting the AGIPD panel 03
-    plotting.image.plotImage(agipd_03_data)#, vmin=0, vmax=3000)
+    #plotting.image.plotImage(agipd_03_data)#, vmin=0, vmax=3000)
 
     # Filtering on AGIPD panel 04, reject events which have negative maximima
     if (agipd_04_data.data.max() <= 0):
         return
     # Plotting the AGIPD panel 04
-    plotting.image.plotImage(agipd_04_data)#, vmin=0, vmax=3000)
+    #plotting.image.plotImage(agipd_04_data)#, vmin=0, vmax=3000)
 
     # Plotting the full AGIPD (assembled)
+    #tmp = (agipd_data.data < 0)
+    #if tmp.any():
+    #    agipd_data.data[tmp] = -1000
     plotting.image.plotImage(agipd_data)#, vmin=0, vmax=3000)
     # Plotting the full AGIPD (assembled) Log scale
-    plotting.image.plotImage(agipd_data, log=True, name="AGIPD_assembled (Log)")#, vmin=0, vmax=3000)
+    #plotting.image.plotImage(agipd_data, log=True, name="AGIPD_assembled (Log)")#, vmin=0, vmax=3000)
 
     # Do hitfinding on the AGIPD panel 04
     analysis.hitfinding.countLitPixels(evt, agipd_04_data, aduThreshold=aduThreshold, hitscoreThreshold=hitscoreThreshold)
@@ -143,7 +154,20 @@ def onEvent(evt):
     # Filter on hits
     if hit:
         print("We have a hit")
-
         # Plotting the full AGIPD (assembled) for hits only
         #plotting.image.plotImage(agipd_data, name='AGIPD assembled (hits)')#, vmin=0, vmax=3000)
 
+
+    if 'slowData' in evt.keys():
+        SD = evt['slowData']
+        for k in ['injposX', 'injposY', 'injposZ', 'xgm_xtd2', 'xgm_xtd9']:
+            if k in SD:
+                rec = evt['slowData'][k]
+                plotting.line.plotHistory(rec, history=1000, label=k)
+            else:
+                print("no")
+        
+        cam_inline = evt['slowData']['cam_inline']
+        # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
+        if cam_inline.data.max() != 65535:
+            plotting.image.plotImage(cam_inline)
