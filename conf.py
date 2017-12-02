@@ -43,7 +43,7 @@ agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format,
                                            do_calibrate=do_calibrate, 
                                            do_precalibrate=do_precalibrate)
 
-init_calib()
+init_calib(dark_run_nr=59)
 init_geom(rot180=True)
 
 # =============== #
@@ -80,17 +80,12 @@ def onEvent(evt):
     #print("Available slow data keys: " + str(evt['slowData'].keys()))
     #print("Available slow data keys: ",(evt['slowData']['injposX']))
 
-    native_cellId = evt['eventID']['Timestamp'].cellId
-    cellId = native_cellId // 2 - 1
+
+    cellId = evt['eventID']['Timestamp'].cellId
     pulseId = evt['eventID']['Timestamp'].pulseId
-    #if cellId != 0:
-    #    return
-    if cellId not in cellId_allowed_range:
-        print("WARNING: Skip event pulseId=%i. cellId=%i out of allowed range." %  (pulseId, cellId))
-        return
-    else:
-        print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
-    
+    print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
+        
+    #print (evt['photonPixelDetectors'].keys())
     # Shape of AGIPD array
     #print(evt['photonPixelDetectors'][agipd_key].data.shape)
 
@@ -164,15 +159,12 @@ def onEvent(evt):
         # Plotting the full AGIPD (assembled) for hits only
         plotting.image.plotImage(agipd_data, name='AGIPD assembled (hits)')#, vmin=0, vmax=3000)
 
-
     #if 'slowData' in evt.keys():
     #    SD = evt['slowData']
     #    for k in ['injposX', 'injposY', 'injposZ', 'xgm_xtd2', 'xgm_xtd9']:
     #        if k in SD:
     #            rec = evt['slowData'][k]
     #            plotting.line.plotHistory(rec, history=1000, label=k)
-    #        else:
-    #            print("no")
         
         #cam_inline = evt['slowData']['cam_inline']
         # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing

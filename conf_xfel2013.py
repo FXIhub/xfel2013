@@ -31,6 +31,7 @@ def init_geom(rot180=False):
 
 def get_agipd_source(agipd_format, agipd_panel, do_assemble, do_calibrate, do_precalibrate=False):
     # Determine the data source
+    agipd_panel_to_port = {3: 0, 4: 1, 15: 2}
     if not run_online:
         tcp_prefix = 'tcp://127.0.0.1'
     else:
@@ -45,8 +46,8 @@ def get_agipd_source(agipd_format, agipd_panel, do_assemble, do_calibrate, do_pr
         if not run_online:
             agipd_socket = '%s:4600' % (tcp_prefix)
         else:
-            agipd_socket = '%s:460%i' % (tcp_prefix, agipd_panel)
-        agipd_key = 'SPB_DET_AGIPD1M-1/DET/3CH0:xtdf'
+            agipd_socket = '%s:460%i' % (tcp_prefix, agipd_panel_to_port[agipd_panel])
+        agipd_key = 'SPB_DET_AGIPD1M-1/DET/%iCH0:xtdf' % agipd_panel
     elif agipd_format == 'combined':
         # Reading from raw AGIPD data source
         if do_precalibrate:

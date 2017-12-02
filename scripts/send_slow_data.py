@@ -12,7 +12,8 @@ loud = False
 SOURCE = "tcp://10.253.0.52:4700"
 OUTPUT_PORT = 4700
 # exflonc09: 10.253.0.67
-OUTPUT = "tcp://10.253.0.67:%i" % OUTPUT_PORT
+# exflonc11: 10.253.0.69
+OUTPUT = "tcp://10.253.0.69:%i" % OUTPUT_PORT
 #OUTPUT = 'tcp://*:{}'.format(OUTPUT_PORT)
 
 print("Source socket: %s" % SOURCE)
@@ -35,20 +36,22 @@ data_container = {
 def fill_data_into_container(data):
     #print(data.keys())
     # Injector motors
+    #data_key = 'encoderPosition'
+    data_key = 'actualPosition'
     try:
-        injposx = data['SPB_IRU_INJMOV/MOTOR/X']['encoderPosition']
+        injposx = data['SPB_IRU_INJMOV/MOTOR/X'][data_key]
         data_container['injposX'] = injposx
         if loud: print("x=%f" % injposx)
     except:
         print("No injector motor X in the data")
     try:
-        injposy = data['SPB_IRU_INJMOV/MOTOR/Y']['encoderPosition']
+        injposy = data['SPB_IRU_INJMOV/MOTOR/Y'][data_key]
         data_container['injposY'] = injposy
         if loud: print("y=%f" % injposy)
     except:
         print("No injector motor Y in the data")
     try:
-        injposz = data['SPB_IRU_INJMOV/MOTOR/Z']['encoderPosition']
+        injposz = data['SPB_IRU_INJMOV/MOTOR/Z'][data_key]
         data_container['injposZ'] = injposz
         if loud: print("z=%f" % injposz)
     except:
