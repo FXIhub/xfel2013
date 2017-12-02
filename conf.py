@@ -38,7 +38,13 @@ do_calibrate = True
 # Apply geometry (only effective if agipd_format='combined')
 do_assemble = True
 
-agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format, agipd_panel=agipd_panel, do_offline=do_offline, do_assemble=do_assemble, do_calibrate=do_calibrate, do_precalibrate=do_precalibrate)
+# Get socket and key depending on operation mode
+agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format, 
+                                           agipd_panel=agipd_panel, 
+                                           do_offline=do_offline, 
+                                           do_assemble=do_assemble, 
+                                           do_calibrate=do_calibrate, 
+                                           do_precalibrate=do_precalibrate)
 
 # =============== #
 # State variables #
@@ -50,9 +56,12 @@ state['euxfel/agipd'] = {}
 state['euxfel/agipd']['socket'] = agipd_socket
 state['euxfel/agipd']['source'] = agipd_key
 state['euxfel/agipd']['format'] = agipd_format
-# exflonc09: 10.253.0.67
-state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
 
+# exflonc05: 10.253.0.63
+# exflonc09: 10.253.0.67
+# exflonc10: 10.253.0.68
+# exflonc11: 10.253.0.69
+state['euxfel/agipd']['slow_data_socket'] = "tcp://10.253.0.67:4700"
 print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 400
