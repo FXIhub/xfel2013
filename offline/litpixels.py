@@ -78,30 +78,6 @@ for fname in flist:
     litpix = np.concatenate((litpix, np.frombuffer(litpix_array.get_obj(), 'i4')))
     trainids = np.concatenate((trainids, np.frombuffer(trainids_array.get_obj(), 'u8')))
     cellids = np.concatenate((cellids, np.frombuffer(cellids_array.get_obj(), 'u8')))
-
-    '''
-    old_size = litpix.shape[0]
-    litpix.resize((old_size + num_trains*len(good_cells),))
-    trainids.resize((old_size + num_trains*len(good_cells),))
-    cellids.resize((old_size + num_trains*len(good_cells),))
-    #for i in range(num_trains):
-    for i in range(10):
-        start = old_size + i*len(good_cells)
-        end = old_size + (i+1)*len(good_cells)
-        h5start = i*num_h5cells
-        h5end = (i+1)*num_h5cells
-
-        analog = f[dset_name][h5start:h5end, 0][good_cells]
-        digital = f[dset_name][h5start:h5end, 1][good_cells]
-        
-        high_gain = (digital < gain_threshold[1])
-        analog = (analog-offset[0])*gain[0]*(badpix[0]==0)
-        # Any medium or low gain pixel is considered to be lit
-        litpix[start:end] += (~high_gain).sum((1,2)) + (high_gain & (analog > litpix_threshold)).sum((1,2))
-        trainids[start:end] = f[trainid_name][h5start:h5end][good_cells].flatten()
-        cellids[start:end] = f[cellid_name][h5start:h5end][good_cells].flatten()
-        sys.stderr.write('\r%s: %d/%d' % (fname, i+1, num_trains))
-    '''
 sys.stderr.write('\n')
 
 os.makedirs('data', exist_ok=True)
@@ -109,3 +85,5 @@ with h5py.File('data/hits_r%.4d.h5'%run, 'w') as f:
     f['hitFinding/litPixels'] = litpix
     f['hitFinding/trainId'] = trainids
     f['hitFinding/cellId'] = cellids
+    f['hitFinding/litPixelThreshold'] = litpix_threshold
+    f['hitFinding/goodCells'] = good_cells
