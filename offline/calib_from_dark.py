@@ -35,17 +35,17 @@ for m in range(16):
     with h5py.File(dark_file, 'r') as f:
         dset = f['/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/data' % (m)]    
         num_trains = dset.shape[0] // num_cells
-        sys.stderr.write('Processing %d trains\n'%num_trains)
+        if m == 0:
+            sys.stderr.write('Processing %d trains\n'%num_trains)
         for i in range(num_trains):
             #for j in range(len(good_cells)):
             for j in range(num_cells):
                 index = num_cells*i+j
                 dark_sum[j,:,:] += dset[num_cells*i + j,0,:,:]
-        sys.stderr.write('\r(%.4d, %.4d)' % (i, m))
+                sys.stderr.write('\r(%.4d, %.4d)' % (i, m))
         dark_sum /= num_trains
-    sys.stderr.write('\n')
 
     with h5py.File('%s/r%.4d/Cheetah-AGIPD%.2d-calib.h5'%(folder, run, m), 'a') as f:
         f['AnalogOffset'][0,:,:,:] = dark_sum
 
-
+sys.stderr.write('\n')
