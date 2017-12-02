@@ -22,7 +22,8 @@ class AGIPD_Combiner():
     def __init__(self, run, 
             good_cells=range(2,62,2), 
             geom_fname='/gpfs/exfel/exp/SPB/201701/p002013/scratch/geom/agipd_taw9_oy2_1050addu_hmg5.geom',
-            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r0030/Cheetah*.h5',
+            #calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r0030/Cheetah*.h5',
+            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r0059/Cheetah*.h5',
             verbose=0):
         self.num_h5cells = 64
         self.verbose = verbose
@@ -104,8 +105,8 @@ class AGIPD_Combiner():
         threshold = self.calib[module]['DigitalGainLevel'][:,cell]
         high_gain = gain < threshold[1]
         low_gain = gain > threshold[2]
-        medium_gain =  ~high_gain * ~low_gain
-        return low_gain*2+medium_gain*1
+        medium_gain = (~high_gain) * (~low_gain)
+        return low_gain*2 + medium_gain
 
     def _get_frame(self, num, type='frame', calibrate=False, threshold=False, sync=True, assemble=True):
         if num > self.nframes or num < 0:
@@ -145,9 +146,14 @@ class AGIPD_Combiner():
                     if sync:
                         if i == self.first_module:
                             trainid = f[train_name][frame_num].astype('i8')[0]
+                            cellid = f[cell_name][frame_num].astype('i8')[0]
                             shift = 0
                         else:
                             shift = (trainid - f[train_name][frame_num].astype('i8')[0]) * self.num_h5cells
+                            shift += (cellid - f[cell_name][frame_num].astype('i8')[0])
+                        if frame_num+shift > f[dset_name].shape[0]:
+                            print('Not syncing in last train')
+                            shift = 0
                     data = f[dset_name][frame_num+shift, type_ind]
                     if calibrate:
                         data = self._calibrate(data,
@@ -191,12 +197,24 @@ class AGIPD_Combiner():
             frame_num = ind - self.nframes_list[file_num-1]
         with h5py.File(self.flist[self.first_module][file_num], 'r') as f:
             cell_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/cellId'%self.first_module
-            pulse_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/cellId'%self.first_module
+            pulse_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/pulseId'%self.first_module
             train_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/trainId'%self.first_module
             train_id = f[train_name][frame_num][0]
             pulse_id = f[pulse_name][frame_num][0]
             cell_id = f[cell_name][frame_num][0]
-        return train_id, cell_id, pulse_id
+
+        shifts = np.zeros((16,), dtype='i8')
+        for i in range(16):
+            with h5py.File(self.flist[i][file_num], 'r') as f:
+                cell_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/cellId'%i
+                train_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/%dCH0:xtdf/image/trainId'%i
+                shifts[i] = (train_id - f[train_name][frame_num].astype('i8')[0]) * self.num_h5cells
+                shifts[i] += (cell_id - f[cell_name][frame_num].astype('i8')[0])
+            
+        return {'train_id': train_id, 
+                'cell_id': cell_id, 
+                'pulse_id': pulse_id,
+                'shift': shifts}
 
     def get_frame(self, num, calibrate=False, sync=True, assemble=True):
         return self._get_frame(num, type='frame', calibrate=calibrate, sync=sync, assemble=assemble)
@@ -244,10 +262,11 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Format: %s <run_number>'%sys.argv[0])
         sys.exit(1)
-    path = '/gpfs/exfel/exp/SPB/201701/p002013/raw/r%.4d' % int(sys.argv[1])
-    print('Calculating powder sum from', path)
+    run = int(sys.argv[1])
+    print('Calculating powder sum for run %d'%run)
     
-    c = AGIPD_Combiner(path, good_cells=list(range(2,30,2)))
+    #c = AGIPD_Combiner(int(sys.argv[1]), good_cells=list(range(2,62,2)))
+    c = AGIPD_Combiner(int(sys.argv[1]), good_cells=[2])
     c.get_powder()
     
     import os
