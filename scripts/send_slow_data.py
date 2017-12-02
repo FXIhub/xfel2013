@@ -36,19 +36,19 @@ def fill_data_into_container(data):
     #print(data.keys())
     # Injector motors
     try:
-        injposx = data['SPB_IRU_INJMOV/MOTOR/X']['actualPosition']
+        injposx = data['SPB_IRU_INJMOV/MOTOR/X']['encoderPosition']
         data_container['injposX'] = injposx
         if loud: print("x=%f" % injposx)
     except:
         print("No injector motor X in the data")
     try:
-        injposy = data['SPB_IRU_INJMOV/MOTOR/Y']['actualPosition']
+        injposy = data['SPB_IRU_INJMOV/MOTOR/Y']['encoderPosition']
         data_container['injposY'] = injposy
         if loud: print("y=%f" % injposy)
     except:
         print("No injector motor Y in the data")
     try:
-        injposz = data['SPB_IRU_INJMOV/MOTOR/Z']['actualPosition']
+        injposz = data['SPB_IRU_INJMOV/MOTOR/Z']['encoderPosition']
         data_container['injposZ'] = injposz
         if loud: print("z=%f" % injposz)
     except:
