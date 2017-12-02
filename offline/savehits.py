@@ -20,7 +20,6 @@ indices = np.where((litpix.reshape(-1, len(good_cells)) > thresh).flatten())[0]
 c = combine_modules.AGIPD_Combiner(run)
 frame_shape = c.get_frame(0).shape
 unassembled_shape = c.get_frame(0, assemble=False).shape
-print(len(indices))
 #shifts = np.array([c.get_frame_id(ind)['shift'][15] for ind in indices])
 
 with h5py.File('data/hits_r%.4d.h5'%run, 'a') as f:
