@@ -33,7 +33,11 @@ data_container = {
     'cam_ehd_ibs': None,
 }
 
+_counter = 0
 def fill_data_into_container(data):
+    global _counter
+    print("(%i)" % _counter)
+    _counter += 1
     #print(data.keys())
     # Injector motors
     #data_key = 'encoderPosition'
