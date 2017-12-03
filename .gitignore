@@ -1,1 +1,10 @@
 *.pyc
+*.pid
+*.py[cod]
+
+# Emacs
+.emacs-backups
+.#*
+.fuse_hidden*
+*~
+*#*
