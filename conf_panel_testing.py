@@ -1,12 +1,16 @@
 import os, sys
 import numpy as np
+import ipc
 import plotting.image
 import plotting.line
 import plotting.correlation
 import analysis.agipd
 import analysis.hitfinding
+import analysis.pixel_detector
 import imp
 from backend import add_record
+
+import spimage
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, this_dir)
@@ -15,13 +19,16 @@ imp.reload(conf_xfel2013)
 from conf_xfel2013 import *
 
 # Do testing with another panel
-do_testing = False
+do_testing = True
+
+# Do radial averaging
+do_radial = True
+
+# Do radial fitting and sizing
+do_sizing = do_radial
 
 # Do slow data
 do_slow_data = True
-
-# Sizing
-do_sizing = False
 
 # =================== #
 # AGIPD configuration #
@@ -138,8 +145,9 @@ def onEvent(evt):
     #plotting.line.plotHistory(roi_integrated_record, history=1000, label='ROI integrated')
     #plotting.line.plotHistogram(roi_15_record, log10=True, hmin=-100, hmax=15000, bins=100, name='ROI histogram')
 
-    analysis.hitfinding.hitrate(evt, hit.data, history=1000)
-    plotting.line.plotHistory(evt['analysis']['hitrate'], history=10000)#, group='Hitfinding')
+    if ipc.mpi.is_main_worker():
+        analysis.hitfinding.hitrate(evt, hit.data, history=1000)
+        plotting.line.plotHistory(evt['analysis']['hitrate'], history=10000)#, group='Hitfinding')
 
     # AGIPD noise level as a function of Cell ID
     cellId_rec = add_record(evt['analysis'], 'analysis', 'cellID', cellId)
@@ -148,7 +156,31 @@ def onEvent(evt):
 
     if hit.data:
         plotting.image.plotImage(agipd_data, name='Agipd panel 15 (only hits)')#, group='Hitfinding')
-            
+
+        if do_radial:
+            if agipd_panel == 15:
+                cx = 21
+                cy = 512+21-8
+            else:# agipd_panel == 4:
+                cx = -100
+                cy = 512+200
+            # Radial average
+            r, I = analysis.pixel_detector.radial(evt, agipd_data, mask=None, cx=cx, cy=cy)
+            plotting.line.plotTrace(I, r)
+        
+            if do_sizing:
+                # Radial fit
+                diameter, infodict = spimage.fit_sphere_diameter_radial(r.data, I.data, 
+                                                                        diameter=400.E-9, intensity=1., wavelength=0.13E-9,
+                                                                        pixel_size=190E-6, detector_distance=5.465,
+                                                                        full_output=True, detector_adu_photon=1, detector_quantum_efficiency=1, 
+                                                                        material='water', maxfev=1000, do_brute_evals=0, dlim=None)
+                err = infodict['error'] 
+                r_fit = infodict['img_r'] 
+                I_fit = infodict['I_fit_m']
+                I_fit_rec = add_record(evt['analysis'], 'analysis', 'Fit', I_fit)
+                r_fit_rec = add_record(evt['analysis'], 'analysis', 'Fit', r_fit)
+                plotting.line.plotTrace(I_fit_rec, r) 
     
     if 'slowData' in evt.keys():
         if 'injposX' in evt['slowData']:
