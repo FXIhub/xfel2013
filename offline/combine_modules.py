@@ -22,8 +22,7 @@ class AGIPD_Combiner():
     def __init__(self, run, 
             good_cells=range(2,62,2), 
             geom_fname='/gpfs/exfel/exp/SPB/201701/p002013/scratch/geom/agipd_taw9_oy2_1050addu_hmg5.geom',
-            #calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r0030/Cheetah*.h5',
-            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r0059/Cheetah*.h5',
+            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest/Cheetah*.h5',
             verbose=0):
         self.num_h5cells = 64
         self.verbose = verbose
