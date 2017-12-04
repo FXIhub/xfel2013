@@ -10,10 +10,13 @@ this_dir = os.path.dirname(os.path.realpath(__file__))
 run_at_desy = socket.getfqdn().split('.')[0].startswith('exflonc')
 run_online = run_at_desy
 
-def init_calib(dark_run_nr=30):
-    # Read calibration data (one file per panel)
+def init_calib(dark_run_nr=None):
+    # Read calibration data (one file per panel)        
     if run_at_desy:
-        calib_dir = '/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/r%04i' % dark_run_nr
+        if dark_run_nr is None:
+            calib_dir = '/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest'
+        else:
+            calib_dir = '/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/r%04i' % dark_run_nr
     else:
         calib_dir = "%s/calib" % this_dir
     fn_agipd_calib_list = ['%s/Cheetah-AGIPD%02i-calib.h5' % (calib_dir, panelID) for panelID in range(0, 16)]

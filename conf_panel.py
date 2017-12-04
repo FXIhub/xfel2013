@@ -9,6 +9,7 @@ import analysis.hitfinding
 import analysis.pixel_detector
 import imp
 import spimage
+import h5py
 from backend import add_record
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -43,6 +44,9 @@ if do_testing:
 else:
     agipd_panel = 15
 
+# Do per-asic common mode correction
+do_asic_cmc = False
+
 # For the combined format precalibrated data can be selected from Karabo
 do_precalibrate = False
 #do_calibrate = not do_precalibrate
@@ -58,8 +62,18 @@ agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format,
                                            do_calibrate=do_calibrate, 
                                            do_precalibrate=do_precalibrate)
 
-init_calib(dark_run_nr=59)
+init_calib(dark_run_nr=None) # reads the latest dark
 init_geom(rot180=True)
+
+# Manually generated bad pixel map
+mask_file = os.path.join(this_dir, "mask/mask_panel15.h5")
+with h5py.File(mask_file, "r") as file_handle:
+    mask = np.bool8(file_handle["data"][...])
+
+# Mask out 3x3 neighborhood around specific bad pixels
+bad_pos = [(493, 21), (491, 35), (493, 37), (498, 34), (499, 38), (492, 31)]
+for y, x in bad_pos:
+    mask[y-1:y-1+3, x-1:x-1+3] = False
 
 # =============== #
 # State variables #
@@ -81,18 +95,21 @@ if do_slow_data and run_online:
     print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 40
-hitscoreThreshold = 140
+hitscoreThreshold = 220
 
 # ============ #
 # onEvent call #
 # ============ #
 
-def onEvent(evt):
+# counter = 0
+# image_array = np.zeros((1000, 512, 128))
 
+def onEvent(evt):
+    # global counter, image_array
     cellId = evt['eventID']['Timestamp'].cellId
     pulseId = evt['eventID']['Timestamp'].pulseId
-    #if cellId > 3:
-    #    return
+    #~if cellId > 3:
+     #   return
     #else:
     #     print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
 
@@ -107,6 +124,22 @@ def onEvent(evt):
                                          cellID=cellId, panelID=agipd_panel,
                                          calibrate=do_calibrate, assemble=False)
 
+    if do_asic_cmc:
+        CM = np.zeros_like(agipd_data.data)
+        for ix in range(128//64):
+            for iy in range(512//64):
+                sel = agipd_data.data[iy*64:(iy+1)*64, ix*64:(ix+1)*64] < aduThreshold
+                if sel.any():
+                    CM[iy*64:(iy+1)*64, ix*64:(ix+1)*64] = np.median(agipd_data.data[iy*64:(iy+1)*64, ix*64:(ix+1)*64][sel])
+        agipd_data.data -= CM
+
+    # image_array[counter, :, :] = agipd_data.data
+    # counter += 1
+    # if counter >= 100:
+    #     import pickle
+    #     pickle.dump(image_array, open("mask_data.p", "wb"))
+    #     import sys
+    #     sys.exit(0)
     #print(agipd_data.data.shape)
     roi_15 = agipd_data.data[512-22:,:]
     roi_nosignal = agipd_data.data[:300,:]
@@ -116,7 +149,9 @@ def onEvent(evt):
     #print(roi_15_record.data.shape)
 
     agipd_data = add_record(evt['analysis'], 'analysis', 'agipd (cm corected)', agipd_data.data - cm)
+    agipd_data.data[~mask] = 0
 
+    plotting.image.plotImage(agipd_data, name="All events no floor correction")#, group='Diagnostics')
     plotting.line.plotHistogram(agipd_data, hmin=-50, hmax=150, bins=100, vline=aduThreshold, name='Detector histogram')#, group='Diagnostics')
     
     # cm corrected agipd
@@ -130,6 +165,7 @@ def onEvent(evt):
 
     # Plotting the AGIPD panel
     plotting.image.plotImage(agipd_data)#, group='Diagnostics')
+    
     #plotting.image.plotImage(roi_15_record, name='ROI')
     #plotting.image.plotImage(evt['photonPixelDetectors'][agipd_key])
 
@@ -137,6 +173,7 @@ def onEvent(evt):
     hit = evt['analysis']['litpixel: isHit']
     hitscore = evt['analysis']['litpixel: hitscore']
     plotting.line.plotHistory(hitscore, history=1000, label='Hitscore', hline=hitscoreThreshold)#, group='Hitfinding') 
+    plotting.line.plotHistory(hit, history=1000, label='isHit')#, group='Hitfinding') 
 
     #analysis.pixel_detector.totalNrPhotons(evt, roi_15_record, aduPhoton=1, aduThreshold=50, outkey='roi_integrated')
     #roi_integrated_record = evt['analysis']['roi_integrated']
@@ -170,8 +207,11 @@ def onEvent(evt):
                 cy = 512+200
             # Radial average
             r, I = analysis.pixel_detector.radial(evt, agipd_data, mask=None, cx=cx, cy=cy)
+            r.data = r.data[:100]
+            I.data = I.data[:100]
+
             plotting.line.plotTrace(I, r)
-        
+            
             if do_sizing:
                 # Radial fit
                 diameter, infodict = spimage.fit_sphere_diameter_radial(r.data, I.data, 
@@ -185,7 +225,6 @@ def onEvent(evt):
                 I_fit_rec = add_record(evt['analysis'], 'analysis', 'Fit', I_fit)
                 r_fit_rec = add_record(evt['analysis'], 'analysis', 'Fit', r_fit)
                 plotting.line.plotTrace(I_fit_rec, r) 
-
     
     if 'slowData' in evt.keys():
         if 'injposX' in evt['slowData']:
@@ -205,3 +244,11 @@ def onEvent(evt):
             #else:
             #    if np.random.rand() < 0.01:
             #        print('EHC camera frame is crap!!')
+
+        if 'cam_inline' in evt['slowData']:
+            cam_inline = evt['slowData']['cam_inline']
+            cam_inline.data = cam_inline.data.reshape((cam_inline.data.shape[1], cam_inline.data.shape[0]))
+
+            # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
+            if cam_inline.data.max() != 65535:
+                plotting.image.plotImage(cam_inline)#, group='Diagnostics')
