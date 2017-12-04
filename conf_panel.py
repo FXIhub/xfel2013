@@ -95,7 +95,7 @@ if do_slow_data and run_online:
     print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 40
-hitscoreThreshold = 220
+hitscoreThreshold = 175
 
 # ============ #
 # onEvent call #
