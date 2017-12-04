@@ -21,7 +21,9 @@ with h5py.File('data/hits_r%.4d.h5'%run, 'r', driver='mpio', comm=comm) as f:
     litpix = f['hitFinding/litPixels'][:]
 
 # 2 sigma cutoff for each cell
-thresh = np.array([litpix[i::len(good_cells)].mean() + litpix[i::len(good_cells)].std()*2 for i in range(len(good_cells))])
+#thresh = np.array([litpix[i::len(good_cells)].mean() + litpix[i::len(good_cells)].std()*2 for i in range(len(good_cells))])
+# Fixed threshold
+thresh = np.ones(len(good_cells))*140
 indices = np.where((litpix.reshape(-1, len(good_cells)) > thresh).flatten())[0]
 c = combine_modules.AGIPD_Combiner(run)
 frame_shape = c.get_frame(0).shape
