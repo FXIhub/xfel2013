@@ -18,7 +18,7 @@ imp.reload(conf_xfel2013)
 from conf_xfel2013 import *
 
 # Do testing with another panel
-do_testing = True
+do_testing = False
 
 # Floor cut
 do_floor_cut = False
@@ -40,26 +40,27 @@ do_slow_data = not do_testing
 # =================== #
 
 #agipd_format = 'combined'
-agipd_format = 'panel'
+#agipd_format = 'panel'
+agipd_format = 'synced'
 
 # The central 3 working panels have the IDs 3, 4, 15
 if do_testing:
-    agipd_panel = 3
+    agipd_panel = [3, 4]
     #agipd_panel = 4
     #agipd_panel = 15
 else:
-    agipd_panel = 15
+    agipd_panel = [3, 4, 15]
 
 # For the combined format precalibrated data can be selected from Karabo
 do_precalibrate = False
 do_calibrate = not do_precalibrate
 
 # Apply geometry (only effective if agipd_format='combined')
-do_assemble = False
+do_assemble = True
 
 # Get socket and key depending on operation mode
 agipd_socket, agipd_key = get_agipd_source(agipd_format=agipd_format, 
-                                           agipd_panel=agipd_panel, 
+                                           agipd_panel=agipd_panel[0], 
                                            do_assemble=do_assemble, 
                                            do_calibrate=do_calibrate, 
                                            do_precalibrate=do_precalibrate)
@@ -106,12 +107,13 @@ def onEvent(evt):
     #print("Available keys: " + str(evt.keys()))
 
     # Shape of AGIPD array
-    #print(evt['photonPixelDetectors'][agipd_key].data.shape)
+    # print("AGIPD before assembly shape: {}".format(evt['photonPixelDetectors'][agipd_key].data.shape))
     
     # Calibrate AGIPD data
     agipd_data = analysis.agipd.getAGIPD(evt, evt['photonPixelDetectors'][agipd_key],
                                          cellID=cellId, panelID=agipd_panel,
-                                         calibrate=do_calibrate, assemble=False)
+                                         calibrate=do_calibrate, assemble=do_assemble)
+    # print("AGIPD before assembly shape: {}".format(agipd_data.data.shape))
     plotting.image.plotImage(agipd_data, name="agipd (not cm corrected)")#, group='Diagnostics')
     #print(agipd_data.data.shape)
     roi_15 = agipd_data.data[512-22:,:]
@@ -127,7 +129,7 @@ def onEvent(evt):
 
     agipd_data.data -= CM
 
-    roi_15_record = add_record(evt['analysis'], 'analysis', 'raw_gain_panel_%i' % agipd_panel, roi_15)
+    roi_15_record = add_record(evt['analysis'], 'analysis', 'raw_gain_panel_{}'.format(agipd_panel), roi_15)
     #print(roi_15_record.data.shape)
 
     agipd_data = add_record(evt['analysis'], 'analysis', 'agipd (cm corected)', agipd_data.data)
@@ -171,7 +173,7 @@ def onEvent(evt):
     plotting.correlation.plotScatter(cellId_rec, noiseLevel_rec, name='Noise vs. Cell ID', history=10000, xlabel='Cell ID', ylabel='Noise')#, group='Diagnostic')
 
     if hit.data:
-        plotting.image.plotImage(agipd_data, name='Agipd panel %i (only hits)' % agipd_panel)#, group='Hitfinding')
+        plotting.image.plotImage(agipd_data, name='Agipd panel {} (only hits)'.format(agipd_panel))#, group='Hitfinding')
 
         # Radial average
         r, I = analysis.pixel_detector.radial(evt, agipd_data, mask=None, cx=21, cy=512+21-8)

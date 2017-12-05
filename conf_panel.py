@@ -7,10 +7,12 @@ import plotting.correlation
 import analysis.agipd
 import analysis.hitfinding
 import analysis.pixel_detector
+import analysis.event
 import imp
 import spimage
 import h5py
 from backend import add_record
+
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, this_dir)
@@ -28,7 +30,7 @@ do_radial = True
 do_sizing = do_radial
 
 # Do slow data
-do_slow_data = True
+do_slow_data = False
 
 # =================== #
 # AGIPD configuration #
@@ -95,7 +97,7 @@ if do_slow_data and run_online:
     print("Slow data socket: %s" % state['euxfel/agipd']['slow_data_socket'])
 
 aduThreshold = 40
-hitscoreThreshold = 175
+hitscoreThreshold = 120
 
 # ============ #
 # onEvent call #
@@ -105,11 +107,14 @@ hitscoreThreshold = 175
 # image_array = np.zeros((1000, 512, 128))
 
 def onEvent(evt):
+
+    # analysis.event.printProcessingRate()
+
     # global counter, image_array
     cellId = evt['eventID']['Timestamp'].cellId
     pulseId = evt['eventID']['Timestamp'].pulseId
-    #~if cellId > 3:
-     #   return
+    #if cellId > 3:
+    #    return
     #else:
     #     print("pulseId=%i\tcellId=%i" %  (pulseId, cellId))
 
@@ -191,7 +196,12 @@ def onEvent(evt):
     plotting.correlation.plotScatter(cellId_rec, noiseLevel_rec, name='Noise vs. Cell ID', history=10000, xlabel='Cell ID', ylabel='Noise')#, group='Diagnostic')
 
     if hit.data:
-        plotting.image.plotImage(agipd_data, name='Agipd panel 15 (only hits)')#, group='Hitfinding')
+
+        d1 = 2*8*1.4*2
+        d2 = 2*8*2.4*2
+        d3 = 2*8*3.4*2
+        center = (21,512+13)
+        plotting.image.plotImage(agipd_data, name='Agipd panel 15 (only hits)', roi_center=center, roi_diameters=[d1,d2,d3])#, group='Hitfinding')
 
         # Radial average
         r, I = analysis.pixel_detector.radial(evt, agipd_data, mask=None, cx=21, cy=512+21-8)
@@ -237,18 +247,20 @@ def onEvent(evt):
 
         if 'cam_ehc_scr' in evt['slowData']:
             cam_ehc = evt['slowData']['cam_ehc_scr']
+            if cam_ehc is not None:
             
-            # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
-            if cam_ehc.data.max() != 65535:
-                plotting.image.plotImage(cam_ehc)#, group='Diagnostics')
-            #else:
-            #    if np.random.rand() < 0.01:
-            #        print('EHC camera frame is crap!!')
+                # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
+                if cam_ehc.data.max() != 65535:
+                    plotting.image.plotImage(cam_ehc)#, group='Diagnostics')
+                #else:
+                #    if np.random.rand() < 0.01:
+                #        print('EHC camera frame is crap!!')
 
         if 'cam_inline' in evt['slowData']:
             cam_inline = evt['slowData']['cam_inline']
-            cam_inline.data = cam_inline.data.reshape((cam_inline.data.shape[1], cam_inline.data.shape[0]))
+            if cam_inline is not None:
+                cam_inline.data = cam_inline.data.reshape((cam_inline.data.shape[1], cam_inline.data.shape[0]))
 
-            # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
-            if cam_inline.data.max() != 65535:
-                plotting.image.plotImage(cam_inline)#, group='Diagnostics')
+                # Filter out bad frames, this criteria is somewhat dangerous as we might melt the cam without even noticing
+                if cam_inline.data.max() != 65535:
+                    plotting.image.plotImage(cam_inline)#, group='Diagnostics')
