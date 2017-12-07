@@ -5,23 +5,27 @@ import sys
 import os
 import multiprocessing as mp
 import ctypes
+import argparse
 
-if len(sys.argv) < 2:
-    print('Format: %s <run_number>'%sys.argv[0])
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='Lit pixel hit finder')
+parser.add_argument('run', 'Run number', type=int)
+parser.add_argument('-d', '--dark', 'Dark run if not latest', type=int, default=None)
+args = parser.parse_args()
+
+folder = '/gpfs/exfel/exp/SPB/201701/p002013/raw/r%.4d/'%args.run
+if args.dark is None:
+    calib_file = '/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest/Cheetah-AGIPD15-calib.h5'
+else:
+    calib_file = '/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r%.4d/Cheetah-AGIPD15-calib.h5'%args.dark
 
 # Constants
-calib_file = '/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest/Cheetah-AGIPD15-calib.h5'
 dset_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/data'
 cellid_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/cellId'
 trainid_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/trainId'
 good_cells = range(2,62,2)
 num_h5cells = 64
-litpix_threshold = 40
+adu_threshold = 40
 num_threads = 80
-
-run = int(sys.argv[1])
-folder = '/gpfs/exfel/exp/SPB/201701/p002013/raw/r%.4d/'%run
 
 # Calibration file for module 15
 bool_cells = np.zeros(num_h5cells, dtype=np.bool)
@@ -31,10 +35,6 @@ with h5py.File(calib_file, 'r') as f:
     gain = f['RelativeGain'][:, bool_cells]
     gain_threshold = f['DigitalGainLevel'][:, bool_cells]
     badpix = f['Badpixel'][:, bool_cells]
-
-litpix = np.empty((0,), dtype='i4')
-trainids = np.empty((0,), dtype='u8')
-cellids = np.empty((0,), dtype='u8')
 
 def threshold(digital, cell):        
     thresh = gain_threshold[:,cell]
@@ -72,12 +72,16 @@ def litpix_worker(rank, fname, num_trains, litpix, trainids, cellids):
         digital = fp[dset_name][h5start:h5end, 1][good_cells]
         for j in range(len(good_cells)):
             data = calibrate(analog[j], digital[j], j)
-            np_litpix[start+j] = (data[384:]>litpix_threshold).sum()
+            np_litpix[start+j] = (data[384:]>adu_threshold).sum()
         np_trainids[start:end] = fp[trainid_name][h5start:h5end][good_cells].flatten()
         np_cellids[start:end] = fp[cellid_name][h5start:h5end][good_cells].flatten()
         if rank == 0:
             sys.stderr.write('\r%s %d/%d' % (fname, i+1, num_trains))
     fp.close()
+
+litpix = np.empty((0,), dtype='i4')
+trainids = np.empty((0,), dtype='u8')
+cellids = np.empty((0,), dtype='u8')
 
 # For all module 15 files
 flist = sorted(glob.glob('%s/*AGIPD15*h5'%folder))
@@ -101,9 +105,9 @@ for fname in flist:
     cellids = np.concatenate((cellids, np.frombuffer(cellids_array.get_obj(), 'u8')))
 
 os.makedirs('data', exist_ok=True)
-with h5py.File('data/hits_r%.4d.h5'%run, 'w') as f:
+with h5py.File('data/hits_r%.4d.h5'%args.run, 'w') as f:
     f['hitFinding/litPixels'] = litpix
     f['hitFinding/trainId'] = trainids
     f['hitFinding/cellId'] = cellids
-    f['hitFinding/litPixelThreshold'] = litpix_threshold
+    f['hitFinding/ADUThreshold'] = adu_threshold
     f['hitFinding/goodCells'] = good_cells

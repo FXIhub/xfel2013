@@ -5,11 +5,13 @@ import h5py
 import combine_modules
 import sys
 import geom
+import argparse
 
-if len(sys.argv) < 2:
-    print('Format: %s <run_number>'%sys.argv[0])
-    sys.exit()
-run = int(sys.argv[1])
+parser = argparse.ArgumentParser(description='Save hits according to threshold')
+parser.add_argument('run', 'Run number', type=int)
+parser.add_argument('-d', '--dark', 'Dark run if not latest', type=int, default=None)
+parser.add_argument('-t', '--threshold', 'Lit pixel threshold to be considered a hit', type=int, default=240)
+args = parser.parse_args()
 
 good_cells = range(2,62,2)
 num_h5cells = 64
@@ -17,18 +19,18 @@ comm = MPI.COMM_WORLD
 num_proc = comm.size
 rank = comm.rank
 
-with h5py.File('data/hits_r%.4d.h5'%run, 'r', driver='mpio', comm=comm) as f:
+with h5py.File('data/hits_r%.4d.h5'%args.run, 'r', driver='mpio', comm=comm) as f:
     litpix = f['hitFinding/litPixels'][:]
 
 # 2 sigma cutoff for each cell
 #thresh = np.array([litpix[i::len(good_cells)].mean() + litpix[i::len(good_cells)].std()*2 for i in range(len(good_cells))])
 # Fixed threshold
-thresh = np.ones(len(good_cells))*240
+thresh = np.ones(len(good_cells))*args.thresh
+
 indices = np.where((litpix.reshape(-1, len(good_cells)) > thresh).flatten())[0]
 if rank == 0:
-    sys.stderr.write('%d hits in run %d\n' % (len(indices), run))
-c = combine_modules.AGIPD_Combiner(run)
-#c = combine_modules.AGIPD_Combiner(run, calib_glob='/home/ayyerkar/xfel/p002013/usr/Shared/calib/r0291/*.h5')
+    sys.stderr.write('%d hits in run %d\n' % (len(indices), args.run))
+c = combine_modules.AGIPD_Combiner(args.run, calib_run=args.dark)
 frame_shape = c.get_frame(0).shape
 unassembled_shape = c.get_frame(0, assemble=False).shape
 
@@ -40,7 +42,7 @@ if rank == 0:
         f['hits/indices'] = indices
         f['hits/litPixels'] = litpix[indices]
 
-with h5py.File('data/hits_r%.4d.h5'%run, 'a', driver='mpio', comm=comm) as f:
+with h5py.File('data/hits_r%.4d.h5'%args.run, 'a', driver='mpio', comm=comm) as f:
     f.create_dataset('hits/unassembled', shape=(len(indices),)+unassembled_shape, chunks=(1,)+unassembled_shape)
     f.create_dataset('hits/assembled', shape=(len(indices),)+frame_shape, chunks=(1,)+frame_shape)
     for i in np.arange(rank, len(indices), num_proc):

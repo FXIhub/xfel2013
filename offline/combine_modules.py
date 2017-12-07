@@ -19,17 +19,18 @@ class AGIPD_Combiner():
     Initially specify path to folder with raw data
     Then use get_frame(num) to get specific frame
     '''
-    def __init__(self, run, 
-            good_cells=range(2,62,2), 
-            geom_fname='/gpfs/exfel/exp/SPB/201701/p002013/scratch/geom/agipd_taw9_oy2_1050addu_hmg5.geom',
-            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest/Cheetah*.h5',
-            verbose=0):
+    def __init__(self, run, calib_run=None, good_cells=range(2,62,2), verbose=0,
+            geom_fname='/gpfs/exfel/exp/SPB/201701/p002013/scratch/geom/agipd_taw9_oy2_1050addu_hmg5.geom'):
         self.num_h5cells = 64
         self.verbose = verbose
         self.good_cells = np.array(good_cells)
         self.geom_fname = geom_fname
         if self.geom_fname is not None:
             self.x, self.y = geom.pixel_maps_from_geometry_file(geom_fname)
+        if calib_run is None:
+            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest/Cheetah*.h5'
+        else:
+            calib_glob='/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r%.4d/Cheetah*.h5'%calib_run
         self._make_flist(run, calib_glob)
         self._get_nframes_list()
         self.frame = np.empty((16,512,128))
