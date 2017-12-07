@@ -28,6 +28,7 @@ indices = np.where((litpix.reshape(-1, len(good_cells)) > thresh).flatten())[0]
 if rank == 0:
     sys.stderr.write('%d hits in run %d\n' % (len(indices), run))
 c = combine_modules.AGIPD_Combiner(run)
+#c = combine_modules.AGIPD_Combiner(run, calib_glob='/home/ayyerkar/xfel/p002013/usr/Shared/calib/r0291/*.h5')
 frame_shape = c.get_frame(0).shape
 unassembled_shape = c.get_frame(0, assemble=False).shape
 
