@@ -11,7 +11,7 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 # Constants
-calib_file = '/gpfs/exfel/exp/SPB/201701/p002013/scratch/calib/r0059/Cheetah-AGIPD15-calib.h5'
+calib_file = '/gpfs/exfel/exp/SPB/201701/p002013/usr/Shared/calib/latest/Cheetah-AGIPD15-calib.h5'
 dset_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/data'
 cellid_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/cellId'
 trainid_name = '/INSTRUMENT/SPB_DET_AGIPD1M-1/DET/15CH0:xtdf/image/trainId'
