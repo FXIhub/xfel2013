@@ -8,9 +8,9 @@ import geom
 import argparse
 
 parser = argparse.ArgumentParser(description='Save hits according to threshold')
-parser.add_argument('run', 'Run number', type=int)
-parser.add_argument('-d', '--dark', 'Dark run if not latest', type=int, default=None)
-parser.add_argument('-t', '--threshold', 'Lit pixel threshold to be considered a hit', type=int, default=240)
+parser.add_argument('run', help='Run number', type=int)
+parser.add_argument('-d', '--dark', help='Dark run if not latest', type=int, default=None)
+parser.add_argument('-t', '--threshold', help='Lit pixel threshold to be considered a hit', type=int, default=240)
 args = parser.parse_args()
 
 good_cells = range(2,62,2)
