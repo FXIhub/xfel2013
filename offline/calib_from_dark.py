@@ -40,8 +40,8 @@ def worker(m):
         for i in range(dset.shape[0] // num_cells):
             for j in range(num_cells):
                 data = dset[num_cells*i+j,0,:,:].astype('f8')
-                dark_sum[j,:,:] += data[j]
-                dark_sumsq[j,:,:] += data[j]**2
+                dark_sum[j,:,:] += data
+                dark_sumsq[j,:,:] += data**2
 
             if m == 0:
                 sys.stderr.write('\r%s: %.4d' % (os.path.basename(fname), i))
